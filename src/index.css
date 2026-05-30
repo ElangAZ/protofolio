@@ -115,8 +115,7 @@ body {
 
 .glass-card {
     background: rgba(255, 255, 255, 0.11);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px) !important;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 28px;
     box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -128,6 +127,11 @@ body {
     position: relative;
     transition: var(--transition-smooth);
     overflow: hidden;
+}
+
+/* Fail-safe prefix declaration in a separate rule block to prevent CSS optimizer collapsing */
+.glass-card {
+    -webkit-backdrop-filter: blur(40px) !important;
 }
 
 .glass-card::before {

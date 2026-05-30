@@ -66,6 +66,13 @@ export default function App() {
     const [ytStartSeconds, setYtStartSeconds] = useState(() => 
         parseInt(getQueryParam('start', localStorage.getItem('discord_cached_start_seconds') || '11'), 10)
     );
+    const [bgUrl, setBgUrl] = useState(() => 
+        getQueryParam('bg', localStorage.getItem('discord_cached_bg_url') || '/assets/background.png')
+    );
+    const [showSakura, setShowSakura] = useState(() => {
+        const param = getQueryParam('sakura', localStorage.getItem('discord_cached_show_sakura'));
+        return param === null ? true : param === 'true';
+    });
 
     // --- Core States ---
     const [viewsCount, setViewsCount] = useState('--');
@@ -78,6 +85,8 @@ export default function App() {
     const [editDiscordId, setEditDiscordId] = useState(discordId);
     const [editYtId, setEditYtId] = useState(ytVideoId);
     const [editStart, setEditStart] = useState(ytStartSeconds);
+    const [editBgUrl, setEditBgUrl] = useState(bgUrl);
+    const [editShowSakura, setEditShowSakura] = useState(showSakura);
     const [toast, setToast] = useState({ show: false, message: '' });
 
     // --- Discord Lanyard Integration States ---
@@ -140,6 +149,15 @@ export default function App() {
     };
 
     /* ==========================================================================
+       Effect: Dynamic Background Image Sync
+       ========================================================================== */
+    useEffect(() => {
+        if (bgUrl) {
+            document.body.style.backgroundImage = `url('${bgUrl}')`;
+        }
+    }, [bgUrl]);
+
+    /* ==========================================================================
        Effect: Sakura Petals Falling Animation (Canvas)
        ========================================================================== */
     useEffect(() => {
@@ -147,6 +165,10 @@ export default function App() {
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!showSakura) return;
+
         let petals = [];
         let windSpeed = 0.2;
         let targetWindSpeed = 0.2;
@@ -189,7 +211,7 @@ export default function App() {
             clearInterval(windInterval);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [showSakura]);
 
     /* ==========================================================================
        Effect: Views Counter Timer
@@ -444,10 +466,14 @@ export default function App() {
         setDiscordId(editDiscordId.trim());
         setYtVideoId(finalYtId);
         setYtStartSeconds(parseInt(editStart, 10) || 0);
+        setBgUrl(editBgUrl.trim());
+        setShowSakura(editShowSakura);
 
         localStorage.setItem('discord_cached_id', editDiscordId.trim());
         localStorage.setItem('discord_cached_yt_id', finalYtId);
         localStorage.setItem('discord_cached_start_seconds', editStart);
+        localStorage.setItem('discord_cached_bg_url', editBgUrl.trim());
+        localStorage.setItem('discord_cached_show_sakura', String(editShowSakura));
 
         showToast("Config saved locally! Refreshing...");
         setTimeout(() => window.location.reload(), 1000);
@@ -468,7 +494,7 @@ export default function App() {
         }
 
         const baseUrl = window.location.origin + window.location.pathname;
-        const customUrl = `${baseUrl}?discord=${encodeURIComponent(editDiscordId.trim())}&yt=${encodeURIComponent(finalYtId)}&start=${encodeURIComponent(editStart)}`;
+        const customUrl = `${baseUrl}?discord=${encodeURIComponent(editDiscordId.trim())}&yt=${encodeURIComponent(finalYtId)}&start=${encodeURIComponent(editStart)}&bg=${encodeURIComponent(editBgUrl.trim())}&sakura=${editShowSakura}`;
         
         navigator.clipboard.writeText(customUrl).then(() => {
             showToast("Copied bio share link to clipboard! 📋");
@@ -537,6 +563,28 @@ export default function App() {
                             min="0"
                         />
                         <small>Target time in seconds where audio playback begins (e.g. 11).</small>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Custom Background Image URL</label>
+                        <input 
+                            type="text" 
+                            value={editBgUrl} 
+                            onChange={(e) => setEditBgUrl(e.target.value)} 
+                            placeholder="e.g. /assets/background.png"
+                        />
+                        <small>Paste any image link (PNG/JPG/GIF/WebP) or keep local default.</small>
+                    </div>
+
+                    <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                        <input 
+                            type="checkbox" 
+                            id="sakura-toggle"
+                            checked={editShowSakura} 
+                            onChange={(e) => setEditShowSakura(e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="sakura-toggle" style={{ textTransform: 'none', cursor: 'pointer', marginBottom: 0, userSelect: 'none', fontSize: '13px' }}>Enable Sakura Petals Effect</label>
                     </div>
 
                     <div className="editor-actions">
